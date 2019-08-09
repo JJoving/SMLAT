@@ -68,7 +68,7 @@ tag="" # tag for managing experiments.
 . ./path.sh
 
 if [ $mode -eq 0 ];then
-  decode_max_len=100
+  decode_max_len=50
   ctc_weight=0
 fi
 

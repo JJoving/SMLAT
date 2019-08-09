@@ -146,7 +146,7 @@ class Decoder(nn.Module):
             mask = None
             if aligns:
                 #mask = torch.ones(encoder_padded_outputs.size(0),encoder_padded_outputs.size(1),dtype=torch.uint8).cuda()
-                mask = torch.zeros(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
+                mask = torch.zeros(encoder_padded_outputs.size(0),encoder_padded_outputs.size(1),dtype=torch.uint8).cuda()
                 if t + 1 < aligns_pad.size(1):
                     for m in range(mask.size(0)):
                         #left_bound = min(aligns_pad[m][t] + self.offset, rnn_output.size(1))
