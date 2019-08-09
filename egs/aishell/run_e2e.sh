@@ -142,7 +142,7 @@ if [ $ebidirectional -eq 1 ]; then
 fi
 
 if [ -z ${tag} ]; then
-  expdir=exp/train_m${LFR_m}_n${LFR_n}_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_lsm${lsm_weight}_ss${sampling_probability}
+    expdir=exp/train_m${LFR_m}_n${LFR_n}_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_lsm_weight${lsm_weight}_sampling_probability${sampling_probability}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -200,7 +200,7 @@ fi
 
 if [ ${stage} -le 4 ]; then
     echo "Stage 4: Decoding"
-    decode_dir=${expdir}/decode_test_beam${beam_size}_nbest${nbest}_ml${decode_max_len}_cweight${ctc_weight}_epoch${epochs}
+    decode_dir=${expdir}/decode_test_beam${beam_size}_nbest${nbest}_ml${decode_max_len}_cweight${ctc_weight}
     mkdir -p ${decode_dir}
     ${cuda_cmd} --gpu ${ngpu} ${decode_dir}/decode.log \
         recognize_e2e.py \

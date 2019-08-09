@@ -13,8 +13,6 @@ dumpdir=dump_1kh   # directory to dump full features
 do_delta=false
 LFR_m=1
 LFR_n=1
-lsm_weight=0
-sampling_probability=0
 train_info=""
 align_trun=0
 # Network architecture
@@ -142,7 +140,7 @@ if [ $ebidirectional -eq 1 ]; then
 fi
 
 if [ -z ${tag} ]; then
-  expdir=exp_1kh/train_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}_lsm${lsm_weight}_ss${sampling_probability}
+    expdir=exp_1kh/train_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -164,8 +162,6 @@ if [ ${stage} -le 3 ]; then
         --dict ${dict} \
         --LFR_m ${LFR_m} \
         --LFR_n ${LFR_n} \
-        --lsm_weight $lsm_weight \
-        --sampling_probability $sampling_probability \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \

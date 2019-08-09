@@ -77,7 +77,11 @@ def recognize(args):
             input_length = torch.tensor([input.size(0)], dtype=torch.int)
             input = input.cuda()
             input_length = input_length.cuda()
-            nbest_hyps = model.recognize(input, input_length, char_list, args)
+            if args.align_trun:
+                align = (js[name]['output'][0]['ctcid'].split())
+                nbest_hyps = model.recognize_align(input, input_length, char_list, align, args)
+            else:
+                nbest_hyps = model.recognize(input, input_length, char_list, args)
             new_js[name] = add_results_to_json(js[name], nbest_hyps, char_list)
 
     with open(args.result_label, 'wb') as f:

@@ -106,7 +106,6 @@ class Seq2Seq(nn.Module):
         #        lpz = None
         #    wers, cers = [], []
         #    nbest_hyps = self.decoder.recognize_beam(encoder_outputs[0], self.char_list, args)
-
         #time5 = time.time()
         alpha = self.mode
         if alpha == 0:
@@ -167,10 +166,10 @@ class Seq2Seq(nn.Module):
         aligns_pad = []
         aligns = [0,]
         for i in range(1, len(align)):
-            if align[i-1] != align[i]:
-                if align[i-1] != 0:
+            if int(align[i-1]) != int(align[i]):
+                if int(align[i-1]) != 0:
                     aligns.append(i)
-                if i == len(align)-1 and align[i] != 0:
+                if i == len(align)-1 and int(align[i]) != 0:
                     aligns.append(lens)
         aligns_pad.append(aligns)
         aligns_pad = pad_list([torch.Tensor(y).long() for y in aligns_pad], IGNORE_ID)
@@ -179,6 +178,7 @@ class Seq2Seq(nn.Module):
                                                  lpz,
                                                  aligns_pad,
                                                  args)
+        return nbest_hyps
     @classmethod
     def load_model(cls, path, args):
         # Load to CPU

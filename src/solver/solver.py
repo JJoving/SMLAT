@@ -177,7 +177,7 @@ class Solver(object):
             padded_target = padded_target.cuda()
             output_lengths = output_lengths.cuda()
             aligns = aligns.cuda()
-            #time1 = time.time()
+            time1 = time.time()
             if self.ctc_trun:
                 loss, batch_wer = self.model(padded_input, input_lengths, padded_target, output_lengths)
                 #loss = self.ctc_loss(probs, padded_target, input_lengths, output_lengths)
@@ -187,7 +187,7 @@ class Solver(object):
             else:
                 loss = self.model(padded_input, input_lengths, padded_target, i, epoch)
                 batch_wer = [0]
-            #time2 = time.time()
+            time2 = time.time()
             if not cross_valid:
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -198,7 +198,7 @@ class Solver(object):
             total_loss += loss.item()
             total_wer.extend(batch_wer)
             time3 = time.time()
-            #print(1000 * (time2 - time1), 1000 * (time3 - time2))
+            print(1000 * (time2 - time1), 1000 * (time3 - time2))
             if i % self.print_freq == 0:
                 print('Epoch {0} | Iter {1} | Average Loss {2:.3f} | '
                         'Current Loss {3:.6f} | Total Wer {4:.6f} | Current Wer {5:.6f}| {6:.1f} ms/batch'.format(

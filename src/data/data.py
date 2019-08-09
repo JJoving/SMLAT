@@ -350,11 +350,11 @@ def align_process(align):
         ys=[]
         for i in range(1, lens):
             if align[k][i-1] != align[k][i]:
-                if align[k][i-1] != 0:
+                if int(align[k][i-1]) != 0:
                     trun.append(i)
                     ys.append(align[k][i-1])
                 lid = i
-                if i == lens-1 and align[k][i] != 0:
+                if i == lens-1 and int(align[k][i]) != 0:
                     trun.append(lens)
                     ys.append(align[k][i])
         truns.append(trun)

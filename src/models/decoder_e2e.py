@@ -145,13 +145,15 @@ class Decoder(nn.Module):
             # step 2. attention: c_i = AttentionContext(s_i,h)
             mask = None
             if aligns:
-                mask = torch.ones(encoder_padded_outputs.size(0),encoder_padded_outputs.size(1),dtype=torch.uint8).cuda()
+                #mask = torch.ones(encoder_padded_outputs.size(0),encoder_padded_outputs.size(1),dtype=torch.uint8).cuda()
+                mask = torch.zeros(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
                 if t + 1 < aligns_pad.size(1):
                     for m in range(mask.size(0)):
                         #left_bound = min(aligns_pad[m][t] + self.offset, rnn_output.size(1))
                         right_bound = max(min(aligns_pad[m][t+1] + self.offset, rnn_output.size(1)), 0)
-                        left_bound = 0
-                        mask[m][left_bound:right_bound] = 0
+                        #left_bound = 0
+                        #mask[m][left_bound:right_bound] = 0
+                        mask[m][right_bound:-1] = 1
             att_c, att_w = self.attention(rnn_output.unsqueeze(dim=1),
                                           encoder_padded_outputs,
                                           mask)
@@ -229,11 +231,12 @@ class Decoder(nn.Module):
         nbest = args.nbest
         ctc_weight = args.ctc_weight
         CTC_SCORING_RATIO = 1.5
-        if args.decode_max_len == 0:
-            # maxlen = encoder_outputs.size(0)
-            maxlen = int(len(torch.nonzero(torch.max(lpz, dim=-1)[1])) * 1.5)
-        else:
+        if args.decode_max_len != 0:
             maxlen = args.decode_max_len
+        elif args.trun:
+            maxlen = int(len(torch.nonzero(torch.max(lpz, dim=-1)[1])) * 1.5)
+        elif args.align_trun:
+            maxlen = int(aligns_pad.size(1) * 1.5)
 
         # *********Init decoder rnn
         h_list = [self.zero_state(encoder_outputs.unsqueeze(0))]
@@ -295,16 +298,16 @@ class Decoder(nn.Module):
                 #import pdb
                 #pdb.set_trace()
                 mask = None
-                if args.trun:
-                    mask = torch.ones(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
+                if args.trun or args.align_trun:
+                    #mask = torch.ones(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
+                    mask = torch.zeros(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
                     if i + 1 < aligns_pad.size(1):
                         for m in range(mask.size(0)):
                             #left_bound = min(aligns_pad[m][i] + self.offset, rnn_output.size(1))
                             right_bound = max(min(aligns_pad[m][i+1] + self.offset, rnn_output.size(1)), 0)
-                            #TA = 1
-                            #if TA:
-                            left_bound = 0
-                            mask[m][left_bound:right_bound] = 0
+                            #left_bound = 0
+                            #mask[m][left_bound:right_bound] = 0
+                            mask[m][right_bound:-1] = 1
 
                 att_c, att_w = self.attention(rnn_output.unsqueeze(dim=1),
                                               encoder_outputs.unsqueeze(0),
