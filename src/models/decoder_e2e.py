@@ -137,7 +137,7 @@ class Decoder(nn.Module):
             h_list[0], c_list[0] = self.rnn[0](
                 rnn_input, (h_list[0], c_list[0]))
             for l in range(1, self.num_layers):
-                h_list[l-1] = self.dropout(h_list[l-1])
+                #h_list[l-1] = self.dropout(h_list[l-1])
                 h_list[l], c_list[l] = self.rnn[l](
                     h_list[l-1], (h_list[l], c_list[l]))
 
@@ -162,7 +162,7 @@ class Decoder(nn.Module):
             att_c = att_c.squeeze(dim=1)
             # step 3. concate s_i and c_i, and input to MLP
             mlp_input = torch.cat((rnn_output, att_c), dim=1)
-            
+
             predicted_y_t = self.mlp(mlp_input)
             y_all.append(predicted_y_t)
 
