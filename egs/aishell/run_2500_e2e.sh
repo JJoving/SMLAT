@@ -74,6 +74,11 @@ tag="" # tag for managing experiments.
 . ./cmd.sh
 . ./path.sh
 
+if [ $mode -eq 0 ];then
+  decode_max_len=100
+  ctc_weight=0
+fi
+
 if [ $ebidirectional -eq 1 ]; then
   echo $ehidden
   ehidden=$[ehidden/2]
@@ -172,15 +177,14 @@ if [ -z ${tag} ]; then
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
+    if $splice; then
+      expdir=${expdir}_splice
+    fi
+    if [ -n ${train_info} ]; then
+      expdir=${expdir}_${train_info}
+    fi
 else
     expdir=exp/$data_set/train_${tag}
-fi
-
-if $splice; then
-  expdir=${expdir}_splice
-fi
-if [ -n ${train_info} ]; then
-  expdir=${expdir}_${train_info}
 fi
 
 mkdir -p ${expdir}
@@ -234,15 +238,16 @@ if [ ${stage} -le 4 ]; then
     decode_dir=${expdir}/decode_test_beam${beam_size}_nbest${nbest}_ml${decode_max_len}_test_set${data}_cweight${ctc_weight}
     mkdir -p ${decode_dir}
     ${cuda_cmd} --gpu ${ngpu} ${decode_dir}/decode.log \
-        recognize.py \
+        recognize_e2e.py \
         --recog_json ${feat_test_dir}/${data}/data.json \
         --dict $dict \
         --result_label ${decode_dir}/data.json \
         --model_path ${expdir}/final.pth.tar \
         --beam_size $beam_size \
         --nbest $nbest \
-        --decode_max_len $decode_max_len
-
+        --decode_max_len $decode_max_len \
+        --ctc_weight $ctc_weight \
+        --trun $trun
     # Compute CER
     local/score.sh --nlsyms ${nlsyms} ${decode_dir} ${dict}
   done
