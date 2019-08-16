@@ -166,6 +166,7 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
+        --half_lr_epoch 10 \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \
