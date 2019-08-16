@@ -47,8 +47,8 @@ class Encoder(nn.Module):
         output, output_lengths = pad_packed_sequence(packed_output,
                                         batch_first=True,
                                         total_length=total_length)
-        #projected = torch.tanh(self.fc_last(output.contiguous().view(-1, output.size(2))))
-        #xs_pad = projected.view(output.size(0), output.size(1), -1)
+        projected = torch.tanh(self.fc_last(output.contiguous().view(-1, output.size(2))))
+        xs_pad = projected.view(output.size(0), output.size(1), -1)
         return output, output_lengths, hidden
 
     def flatten_parameters(self):

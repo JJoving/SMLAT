@@ -118,10 +118,10 @@ class Decoder(nn.Module):
         #import pdb
         #pdb.set_trace()
         if self.sampling_probability:
-            if epoch <= 8:
+            if epoch <= 5:
                 sp = 0
             else:
-                sp = 0.08 + 0.01 * epoch
+                sp = self.sampling_probability + 0.01 * epoch
 
 
         embedded = self.embedding(ys_in_pad)
@@ -228,6 +228,8 @@ class Decoder(nn.Module):
             nbest_hyps:
         """
         # search params
+        #import pdb
+        #pdb.set_trace()
         beam = args.beam_size
         nbest = args.nbest
         ctc_weight = args.ctc_weight
