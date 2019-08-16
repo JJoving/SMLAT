@@ -106,7 +106,7 @@ class Solver(object):
             print('-' * 85)
 
             # Adjust learning rate (halving)
-            if self.half_lr and val_loss >= self.prev_val_loss epoch >= self.half_lr_epoch:
+            if self.half_lr and val_loss >= self.prev_val_loss and epoch >= self.half_lr_epoch:
                 if self.early_stop and self.halving:
                     print("Already start halving learing rate, it still gets "
                           "too small imporvement, stop training early.")
