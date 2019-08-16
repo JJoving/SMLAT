@@ -26,6 +26,7 @@ class Solver(object):
         self.max_norm = args.max_norm
         self.ctc_trun = args.ctc_trun
         self.align_trun = args.align_trun
+        self.half_lr_epoch = args.half_lr_epoch
         # save and load model
         self.save_folder = args.save_folder
         self.checkpoint = args.checkpoint
@@ -105,7 +106,7 @@ class Solver(object):
             print('-' * 85)
 
             # Adjust learning rate (halving)
-            if self.half_lr and val_loss >= self.prev_val_loss:
+            if self.half_lr and val_loss >= self.prev_val_loss epoch >= self.half_lr_epoch:
                 if self.early_stop and self.halving:
                     print("Already start halving learing rate, it still gets "
                           "too small imporvement, stop training early.")

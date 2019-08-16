@@ -81,6 +81,8 @@ parser.add_argument('--max_norm', default=5, type=float,
                     help='Gradient norm threshold to clip')
 parser.add_argument('--mode', default=0.5, type=float,
                     help='Multitask learning coefficient, alpha: alpha*ctc_loss + (1-alpha)*att_loss')
+parser.add_argument('--half_lr_epoch', dest='half_lr_epoch', default=0, type=int,
+                    help='Halving learning rate epoch at least')
 # minibatch
 parser.add_argument('--batch_size', '-b', default=32, type=int,
                     help='Batch size')
