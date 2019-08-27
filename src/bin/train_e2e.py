@@ -68,6 +68,10 @@ parser.add_argument('--ctc_weight', default=0, type=float,
                     help='ctc_weight')
 parser.add_argument('--offset', default=0, type=int,
                     help='Number of align attention offset.')
+parser.add_argument('--peak_left', default=0, type=int,
+                    help='peak_left.')
+parser.add_argument('--peak_right', default=0, type=int,
+                    help='peak_right.')                    
 
 # Training config
 parser.add_argument('--epochs', default=30, type=int,
@@ -161,7 +165,7 @@ def main(args):
     decoder = Decoder(vocab_size, args.dembed, sos_id,
                       eos_id, args.dhidden, args.dlayer, args.offset, args.atype,
                       dropout=args.edropout,lsm_weight=args.lsm_weight,sampling_probability=args.sampling_probability,
-                      bidirectional_encoder=args.ebidirectional)
+                      peak_left = args.peak_right, peak_right = args.peak_right, bidirectional_encoder=args.ebidirectional)
     if args.ebidirectional:
         eprojs = args.ehidden * 2
     else:

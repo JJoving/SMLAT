@@ -16,6 +16,8 @@ LFR_n=1  # Low Frame Rate: number of frames to ski
 lsm_weight=0
 sampling_probability=0
 train_info=""
+peak_left=0
+peak_right=0
 
 # Network architecture
 # Encoder
@@ -67,9 +69,13 @@ tag="" # tag for managing experiments.
 . ./cmd.sh
 . ./path.sh
 
-if [ $mode -eq 0 ];then
-  decode_max_len=50
+
+if [ $mode -eq "0" ];then
   ctc_weight=0
+fi
+
+if [ $ctc_weight -eq "0" ];then
+  decode_max_len=50
 fi
 
 if [ $stage -le 0 ]; then
@@ -142,7 +148,7 @@ if [ $ebidirectional -eq 1 ]; then
 fi
 
 if [ -z ${tag} ]; then
-    expdir=exp/train_m${LFR_m}_n${LFR_n}_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_lsm_weight${lsm_weight}_sampling_probability${sampling_probability}
+    expdir=exp/train_m${LFR_m}_n${LFR_n}_bid${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_lsm${lsm_weight}_sampling${sampling_probability}_peak_l_r${peak_left}_${peak_right}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -167,6 +173,8 @@ if [ ${stage} -le 3 ]; then
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
         --half_lr_epoch 10 \
+        --peak_left $peak_left \
+        --peak_right $peak_right \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \

@@ -207,6 +207,8 @@ class Seq2Seq(nn.Module):
                           package['edropout'],
                           package['lsm_weight'],
                           package['sampling_probability'],
+                          package['peak_left'],
+                          package['peak_right'],
                           bidirectional_encoder=package['ebidirectional']
                           )
         ctc = CTC(package['dvocab_size'],
@@ -243,6 +245,8 @@ class Seq2Seq(nn.Module):
             'atype':model.decoder.atype,
             'sampling_probability':model.decoder.sampling_probability,
             'lsm_weight':model.decoder.lsm_weight,
+            'peak_left':model.decoder.peak_left,
+            'peak_right':model.decoder.peak_right,
             # state
             'state_dict': model.state_dict(),
             'optim_dict': optimizer.state_dict(),

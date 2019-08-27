@@ -65,7 +65,7 @@ ctc_weight=0.3
 # Decode config
 beam_size=10
 nbest=1
-decode_max_len=100
+decode_max_len=50
 
 # exp tag
 tag="" # tag for managing experiments.
@@ -75,8 +75,11 @@ tag="" # tag for managing experiments.
 . ./path.sh
 
 if [ $mode -eq 0 ];then
-  decode_max_len=100
   ctc_weight=0
+fi
+
+if [ $ctc_weight -eq 0 ];then
+  decode_max_len=50
 fi
 
 if [ $ebidirectional -eq 1 ]; then

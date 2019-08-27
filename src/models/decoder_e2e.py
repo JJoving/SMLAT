@@ -21,7 +21,8 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, vocab_size, embedding_dim, sos_id, eos_id, hidden_size,
-                 num_layers, offset, atype, dropout, lsm_weight, sampling_probability, bidirectional_encoder=True):
+                 num_layers, offset, atype, dropout, lsm_weight, sampling_probability,
+                 peak_left = 0, peak_right = 0, bidirectional_encoder=True):
         super(Decoder, self).__init__()
         # Hyper parameters
         # embedding + output
@@ -35,6 +36,8 @@ class Decoder(nn.Module):
         self.lsm_weight = lsm_weight
         self.criterion = LabelSmoothingLoss(vocab_size, IGNORE_ID, self.lsm_weight)
         self.sampling_probability = sampling_probability
+        self.peak_left = peak_left
+        self.peak_right = peak_right
         # rnn
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -149,11 +152,18 @@ class Decoder(nn.Module):
                 #mask = torch.zeros(encoder_padded_outputs.size(0),encoder_padded_outputs.size(1),dtype=torch.uint8).cuda()
                 if t + 1 < aligns_pad.size(1):
                     for m in range(mask.size(0)):
-                        #left_bound = min(aligns_pad[m][t] + self.offset, rnn_output.size(1))
-                        right_bound = max(min(aligns_pad[m][t+1] + self.offset, rnn_output.size(1)), 0)
+                        if self.peak_left != 0:
+                            left_id = max(t-self.peak_left+1, 0)
+                        else:
+                            left_id = 0
+                        right_id = min(t+1+self.peak_right, aligns_pad.size(1)-1)
+                        left_bound = min(aligns_pad[m][left_id] + self.offset, rnn_output.size(1))
+                        right_bound = max(min(aligns_pad[m][right_id] + self.offset, rnn_output.size(1)), 0)
+                        #right_bound = max(min(aligns_pad[m][t+1] + self.offset, rnn_output.size(1)), 0)
                         #left_bound = 0
-                        mask[m][0:right_bound] = 0
+                        #mask[m][0:right_bound] = 0
                         #mask[m][right_bound:-1] = 1
+                        mask[m][left_bound:right_bound] = 0
             att_c, att_w = self.attention(rnn_output.unsqueeze(dim=1),
                                           encoder_padded_outputs,
                                           mask)
@@ -306,11 +316,18 @@ class Decoder(nn.Module):
                     #mask = torch.zeros(encoder_outputs.unsqueeze(0).size(0),encoder_outputs.unsqueeze(0).size(1),dtype=torch.uint8).cuda()
                     if i + 1 < aligns_pad.size(1):
                         for m in range(mask.size(0)):
-                            #left_bound = min(aligns_pad[m][i] + self.offset, rnn_output.size(1))
-                            right_bound = max(min(aligns_pad[m][i+1] + self.offset, rnn_output.size(1)), 0)
+                            if self.peak_left != 0:
+                                left_id = max(i-self.peak_left+1, 0)
+                            else:
+                                left_id = 0
+                            right_id = min(i+1+self.peak_right, aligns_pad.size(1)-1)
+                            left_bound = min(aligns_pad[m][left_id] + self.offset, rnn_output.size(1))
+                            right_bound = max(min(aligns_pad[m][right_id] + self.offset, rnn_output.size(1)), 0)
+                            #right_bound = max(min(aligns_pad[m][i+1] + self.offset, rnn_output.size(1)), 0)
                             #left_bound = 0
-                            mask[m][0:right_bound] = 0
+                            #mask[m][0:right_bound] = 0
                             #mask[m][right_bound:-1] = 1
+                            mask[m][left_bound:right_bound] = 0
 
                 att_c, att_w = self.attention(rnn_output.unsqueeze(dim=1),
                                               encoder_outputs.unsqueeze(0),

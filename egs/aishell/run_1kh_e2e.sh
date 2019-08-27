@@ -68,8 +68,11 @@ tag="" # tag for managing experiments.
 . ./path.sh
 
 if [ $mode -eq 0 ];then
-  decode_max_len=100
   ctc_weight=0
+fi
+
+if [ $ctc_weight -eq 0 ];then
+  decode_max_len=50
 fi
 
 if [ $stage -le 0 ]; then
@@ -142,7 +145,7 @@ if [ $ebidirectional -eq 1 ]; then
 fi
 
 if [ -z ${tag} ]; then
-    expdir=exp_1kh/train_bidirectionaltrain${ebidirectional}_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}_lsm_weight${lsm_weight}_sampling_probability${sampling_probability}
+    expdir=exp_1kh/train_bid${ebidirectional}_in${einput}_hid${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}_lsm_weight${lsm_weight}_sampling${sampling_probability}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -150,7 +153,7 @@ if [ -z ${tag} ]; then
       expdir=${expdir}_${train_info}
     fi
 else
-    expdir=exp/${tag}
+    expdir=exp_1kh/${tag}
 fi
 mkdir -p ${expdir}
 echo ${expdir}
@@ -166,7 +169,7 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
-        --half_lr_epoch 10 \
+        --half_lr_epoch 7 \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \
