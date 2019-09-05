@@ -16,6 +16,9 @@ LFR_n=1
 lsm_weight=0
 sampling_probability=0
 train_info=""
+peak_left=0
+peak_right=0
+
 align_trun=0
 # Network architecture
 # Encoder
@@ -56,7 +59,7 @@ visdom=0
 visdom_id="LAS Training"
 mode=0.5
 # Decode config
-beam_size=10
+beam_size=5
 nbest=1
 decode_max_len=0
 
@@ -145,7 +148,7 @@ if [ $ebidirectional -eq 1 ]; then
 fi
 
 if [ -z ${tag} ]; then
-    expdir=exp_1kh/train_bid${ebidirectional}_in${einput}_hid${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}_lsm_weight${lsm_weight}_sampling${sampling_probability}
+    expdir=exp_1kh/train_bid${ebidirectional}_in${einput}_hid${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_mode${mode}_trun_${trun}_offset${offset}_LFR_m${LFR_m}_LFR_n${LFR_n}_lsm_weight${lsm_weight}_sampling${sampling_probability}_peak_l_r${peak_left}_${peak_right}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -169,7 +172,9 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
-        --half_lr_epoch 7 \
+        --half_lr_epoch 10 \
+        --peak_left ${peak_left} \
+        --peak_right ${peak_right} \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \
