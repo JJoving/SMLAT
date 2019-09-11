@@ -3,6 +3,13 @@ import argparse
 import json
 
 import torch
+import random
+import numpy as np
+
+random.seed(1
+np.random.seed(1)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
 
 import kaldi_io
 from e2e import Seq2Seq
@@ -52,6 +59,7 @@ parser.add_argument('--align_trun', default=False, type=str2bool,
 def recognize(args):
     #import pdb
     #pdb.set_trace()
+
     char_list, sos_id, eos_id = process_dict(args.dict)
     args.char_list = char_list
     model, LFR_m, LFR_n  = Seq2Seq.load_model(args.model_path, args)

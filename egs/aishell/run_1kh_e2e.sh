@@ -172,7 +172,7 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
-        --half_lr_epoch 10 \
+        --half_lr_epoch 6 \
         --peak_left ${peak_left} \
         --peak_right ${peak_right} \
         --einput $einput \
@@ -210,7 +210,7 @@ fi
 
 if [ ${stage} -le 4 ]; then
     echo "Stage 4: Decoding"
-  for data in 8000 ios nos dev; do
+  for data in 8000 ios nos; do
     decode_dir=${expdir}/decode_test_beam${beam_size}_nbest${nbest}_ml${decode_max_len}_cweight${ctc_weight}_test_set${data}
     mkdir -p ${decode_dir}
     ${cuda_cmd} --gpu ${ngpu} ${decode_dir}/decode.log \

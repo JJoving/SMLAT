@@ -2,6 +2,13 @@
 import argparse
 
 import torch
+import random
+import numpy as np
+
+random.seed(1)
+np.random.seed(1)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
 
 from data import AudioDataLoader, AudioDataset
 from decoder_e2e import Decoder
@@ -71,7 +78,7 @@ parser.add_argument('--offset', default=0, type=int,
 parser.add_argument('--peak_left', default=0, type=int,
                     help='peak_left.')
 parser.add_argument('--peak_right', default=0, type=int,
-                    help='peak_right.')                    
+                    help='peak_right.')
 
 # Training config
 parser.add_argument('--epochs', default=30, type=int,
