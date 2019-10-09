@@ -6,7 +6,7 @@ import torch
 import random
 import numpy as np
 
-random.seed(1
+random.seed(1)
 np.random.seed(1)
 torch.manual_seed(1)
 torch.cuda.manual_seed(1)

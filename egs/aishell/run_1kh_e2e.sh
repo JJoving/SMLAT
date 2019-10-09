@@ -18,6 +18,7 @@ sampling_probability=0
 train_info=""
 peak_left=0
 peak_right=0
+half_lr_epoch=8
 
 align_trun=0
 # Network architecture
@@ -48,7 +49,7 @@ maxlen_in=800
 maxlen_out=150
 # optimizer
 optimizer=adam
-lr=1e-3
+lr=2e-4
 momentum=0
 l2=1e-5
 # logging and visualize
@@ -172,7 +173,7 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
-        --half_lr_epoch 6 \
+        --half_lr_epoch $half_lr_epoch \
         --peak_left ${peak_left} \
         --peak_right ${peak_right} \
         --einput $einput \

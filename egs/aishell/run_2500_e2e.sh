@@ -22,6 +22,9 @@ lsm_weight=0
 sampling_probability=0
 splice=false
 train_info=""
+peak_left=0
+peak_right=0
+half_lr_epoch=6
 
 # Network architecture
 # Encoder
@@ -63,9 +66,9 @@ offset=0
 ctc_weight=0.3
 
 # Decode config
-beam_size=10
+beam_size=5
 nbest=1
-decode_max_len=50
+decode_max_len=0
 
 # exp tag
 tag="" # tag for managing experiments.
@@ -74,11 +77,11 @@ tag="" # tag for managing experiments.
 . ./cmd.sh
 . ./path.sh
 
-if [ $mode -eq 0 ];then
+if [ $mode -eq "0" ];then
   ctc_weight=0
 fi
 
-if [ $ctc_weight -eq 0 ];then
+if [ $ctc_weight -eq "0" ];then
   decode_max_len=50
 fi
 
@@ -176,7 +179,7 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ -z ${tag} ]; then
-    expdir=exp/$data_set/train_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_bidirectionaltrain${ebidirectional}_mode${mode}_trun${trun}_offset${offset}_m${LFR_m}_n${LFR_n}_lsm_weight${lsm_weight}_sampling_probability${sampling_probability}
+    expdir=exp/$data_set/train_in${einput}_hidden${ehidden}_e${elayer}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_bidi${ebidirectional}_mode${mode}_trun${trun}_offset${offset}_m${LFR_m}_n${LFR_n}_lsm${lsm_weight}_sampling${sampling_probability}__peak_l_r${peak_left}_${peak_right}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -203,7 +206,9 @@ if [ ${stage} -le 3 ]; then
         --LFR_n ${LFR_n} \
         --lsm_weight $lsm_weight \
         --sampling_probability $sampling_probability \
-        --half_lr_epoch 10 \
+        --half_lr_epoch $half_lr_epoch \
+        --peak_left ${peak_left} \
+        --peak_right ${peak_right} \
         --einput $einput \
         --ehidden $ehidden \
         --elayer $elayer \
