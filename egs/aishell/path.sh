@@ -1,6 +1,7 @@
 MAIN_ROOT=$PWD/../..
 #KALDI_ROOT=$MAIN_ROOT/tools/kaldi
-KALDI_ROOT=/search/speech/chenjunjie/github/kaldi
+#KALDI_ROOT=/home/work_nfs/jjchen/github/kaldi
+KALDI_ROOT=/home/work_nfs/common/kaldi-20181108-cuda9
 SRC_ROOT=$MAIN_ROOT/src
 
 
