@@ -131,8 +131,8 @@ class Seq2Seq(nn.Module):
         Returns:
             nbest_hyps:
         """
-        #import pdb
-        #pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         encoder_outputs, _, _ = self.encoder(input.unsqueeze(0), input_length)
         if args.ctc_weight > 0 or args.trun:
             lpz = self.ctc.log_softmax(encoder_outputs)[0]
@@ -193,6 +193,7 @@ class Seq2Seq(nn.Module):
         encoder = Encoder(package['einput'],
                           package['ehidden'],
                           package['elayer'],
+                          package['eprojection'],
                           dropout=package['edropout'],
                           bidirectional=package['ebidirectional'],
                           rnn_type=package['etype'])
@@ -202,6 +203,8 @@ class Seq2Seq(nn.Module):
                           package['deos_id'],
                           package['dhidden'],
                           package['dlayer'],
+                          package['eprojection'],
+                          package['dprojection'],
                           package['doffset'],
                           package['atype'],
                           package['edropout'],
@@ -212,7 +215,7 @@ class Seq2Seq(nn.Module):
                           bidirectional_encoder=package['ebidirectional']
                           )
         ctc = CTC(package['dvocab_size'],
-                eprojs = package['ehidden'] * 2 if package['ebidirectional'] else package['ehidden'],
+                  eprojs = package['eprojection'],
                   dropout_rate = package['edropout'],
                   )
         encoder.flatten_parameters()
@@ -234,6 +237,7 @@ class Seq2Seq(nn.Module):
             'edropout': model.encoder.dropout,
             'ebidirectional': model.encoder.bidirectional,
             'etype': model.encoder.rnn_type,
+            'eprojection':model.encoder.projection_size,
             # decoder
             'dvocab_size': model.decoder.vocab_size,
             'dembed': model.decoder.embedding_dim,
@@ -247,6 +251,7 @@ class Seq2Seq(nn.Module):
             'lsm_weight':model.decoder.lsm_weight,
             'peak_left':model.decoder.peak_left,
             'peak_right':model.decoder.peak_right,
+            'dprojection':model.dncoder.dproj_size,
             # state
             'state_dict': model.state_dict(),
             'optim_dict': optimizer.state_dict(),

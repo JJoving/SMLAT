@@ -62,9 +62,9 @@ class DotProductAttention(nn.Module):
 
 class ContentBasedAttention(nn.Module):
 
-    def __init__(self, hidden_size):
+    def __init__(self, hidden_size, eproj_size):
         super(ContentBasedAttention, self).__init__()
-        self.attenV = self.Linear(hidden_size, hidden_size, bias=False)
+        self.attenV = self.Linear(eproj_size, hidden_size, bias=False)
         # W * LSTM_outputs + b
         self.attenW = self.Linear(hidden_size, hidden_size)
         self.attenwT = self.Linear(hidden_size, 1, bias=False)
@@ -72,7 +72,7 @@ class ContentBasedAttention(nn.Module):
     def Linear(self, input_dim, output_dim, bias=True):
         linear = nn.Linear(input_dim, output_dim, bias=bias)
         return linear
-    def forward(self, dec_inputs, enc_outputs, mask, scaling=1.0):
+    def forward(self, dec_inputs, enc_outputs, mask, scaling=2.0):
         """
         Args:
             dec_inputs: N x To x H
@@ -90,6 +90,7 @@ class ContentBasedAttention(nn.Module):
         batch_size = dec_inputs.size(0)
         hidden_size = dec_inputs.size(2)
         input_lengths = enc_outputs.size(1)
+        eproj_size = enc_outputs.size(2)
         atten_Vh = self.attenV(enc_outputs)
         atten_Ws = (self.attenW(dec_inputs)
                           .view(batch_size, 1, hidden_size)
@@ -97,8 +98,8 @@ class ContentBasedAttention(nn.Module):
         atten_e = F.tanh(atten_Vh + atten_Ws)
         atten_e = self.attenwT(atten_e).view(batch_size, -1)
         if mask is not None:
-            atten_a = F.softmax(scaling * atten_e.masked_fill(mask, -1e-5), dim=1).view(batch_size, 1, -1)
+            atten_a = F.softmax(scaling * atten_e.masked_fill(mask, -1e-6), dim=1).view(batch_size, 1, -1)
         else:
             atten_a = F.softmax(scaling * atten_e, dim=1).view(batch_size, 1, -1)
-        atten_c = torch.bmm(atten_a, enc_outputs).view(batch_size, hidden_size)
+        atten_c = torch.bmm(atten_a, enc_outputs).view(batch_size, eproj_size)
         return atten_c, atten_a

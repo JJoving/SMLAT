@@ -60,6 +60,8 @@ parser.add_argument('--ebidirectional', default=1, type=int,
                     help='Whether use bidirectional encoder')
 parser.add_argument('--etype', default='lstm', type=str,
                     help='Type of encoder RNN')
+parser.add_argument('--eprojs', default='512', type=int,
+                    help='Encoder projection dim')
 # attention
 parser.add_argument('--atype', default='dot', type=str,
                     help='Type of attention (Only support Dot Product now)')
@@ -71,6 +73,8 @@ parser.add_argument('--dhidden', default=512*2, type=int,
                     '(2*) hidden size dependding on bidirection')
 parser.add_argument('--dlayer', default=1, type=int,
                     help='Number of decoder layers.')
+parser.add_argument('--dprojs', default='512', type=int,
+                    help='Dncoder projection dim')
 parser.add_argument('--ctc_weight', default=0, type=float,
                     help='ctc_weight')
 parser.add_argument('--offset', default=0, type=int,
@@ -79,6 +83,11 @@ parser.add_argument('--peak_left', default=0, type=int,
                     help='peak_left.')
 parser.add_argument('--peak_right', default=0, type=int,
                     help='peak_right.')
+parser.add_argument('--ddropout', default=0.0, type=float,
+                    help='Dncoder dropout rate')
+# ctc
+parser.add_argument('--cdropout', default=0.0, type=float,
+                    help='Ctc dropout rate')
 
 # Training config
 parser.add_argument('--epochs', default=30, type=int,
@@ -166,18 +175,15 @@ def main(args):
     # model
     #import pdb
     #pdb.set_trace()
-    encoder = Encoder(args.einput * args.LFR_m, args.ehidden, args.elayer, vocab_size,
+    encoder = Encoder(args.einput * args.LFR_m, args.ehidden, args.elayer, args.eprojs, vocab_size,
                       dropout=args.edropout, bidirectional=args.ebidirectional,
                       rnn_type=args.etype)
     decoder = Decoder(vocab_size, args.dembed, sos_id,
-                      eos_id, args.dhidden, args.dlayer, args.offset, args.atype,
-                      dropout=args.edropout,lsm_weight=args.lsm_weight,sampling_probability=args.sampling_probability,
+                      eos_id, args.dhidden, args.dlayer, args.dprojs, args.eprojs, args.offset, args.atype,
+                      dropout=args.ddropout,lsm_weight=args.lsm_weight,sampling_probability=args.sampling_probability,
                       peak_left = args.peak_right, peak_right = args.peak_right, bidirectional_encoder=args.ebidirectional)
-    if args.ebidirectional:
-        eprojs = args.ehidden * 2
-    else:
-        eprojs = args.ehidden
-    ctc = CTC(odim = vocab_size,eprojs = eprojs, dropout_rate = args.edropout)
+
+    ctc = CTC(odim = vocab_size,eprojs = args.eprojs, dropout_rate = args.cdropout)
     #lstm_model = Lstmctc.load_model(args.continue_from)
 
     model = Seq2Seq(encoder, decoder, ctc, args)

@@ -42,7 +42,9 @@ dembed=512
 dhidden=512
 dlayer=1
 dprojs=512
-
+ddropout=0.2
+# ctc
+cdropout=0.2
 # Training config
 epochs=20
 half_lr=1
@@ -181,7 +183,7 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ -z ${tag} ]; then
-    expdir=exp/$data_set/tr_in${einput}_hid${ehidden}_e${elayer}_ep_${eprojs}_${etype}_drop${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_dp_${dprojs}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_bidi${ebidirectional}_mode${mode}_trun${trun}_offset${offset}_m${LFR_m}_n${LFR_n}_lsm${lsm_weight}_sp${sampling_probability}_peak_l_r${peak_left}_${peak_right}
+    expdir=exp/$data_set/tr_in${einput}_hid${ehidden}_e${elayer}_ep_${eprojs}_${etype}_ed${edropout}_${atype}_emb${dembed}_hidden${dhidden}_d${dlayer}_dp${dprojs}_dd${ddropout}_cd${cdropout}_epoch${epochs}_norm${max_norm}_bs${batch_size}_mli${maxlen_in}_mlo${maxlen_out}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_bidi${ebidirectional}_mode${mode}_trun${trun}_offset${offset}_m${LFR_m}_n${LFR_n}_lsm${lsm_weight}_sp${sampling_probability}_peak_l_r${peak_left}_${peak_right}
     if ${do_delta}; then
         expdir=${expdir}_delta
     fi
@@ -199,7 +201,7 @@ mkdir -p ${expdir}
 echo $expdir
 if [ ${stage} -le 3 ]; then
     echo "Stage 3: Network Training"
-    ${cuda_cmd} -l hostname=node21 --gpu ${ngpu} ${expdir}/train.log \
+    ${cuda_cmd} -l hostname=!node19 --gpu ${ngpu} ${expdir}/train.log \
         train_e2e.py \
         --train_json ${feat_train_dir}/data.json \
         --valid_json ${feat_cv_dir}/data.json \
@@ -216,13 +218,15 @@ if [ ${stage} -le 3 ]; then
         --elayer $elayer \
         --edropout $edropout \
         --ebidirectional $ebidirectional \
-	--eprojs $eprojs \
+        --eprojs $eprojs \
         --etype $etype \
         --atype $atype \
         --dembed $dembed \
         --dhidden $dhidden \
         --dlayer $dlayer \
-	--dprojs $dprojs \
+      	--dprojs $dprojs \
+        --ddropout $ddropout \
+        --cdropout $cdropout \
         --epochs $epochs \
         --half_lr $half_lr \
         --early_stop $early_stop \
@@ -251,7 +255,7 @@ if [ ${stage} -le 4 ]; then
     decode_dir=${expdir}/decode_test_beam${beam_size}_nbest${nbest}_ml${decode_max_len}_test_set${data}_cweight${ctc_weight}
     mkdir -p ${decode_dir}
     #feat_test_dir = dump/${dumpdir}/${data}/delta${do_delta}
-    ${cuda_cmd} -l hostname=node21 --gpu ${ngpu} ${decode_dir}/decode.log \
+    ${cuda_cmd} -l hostname=!node19 --gpu ${ngpu} ${decode_dir}/decode.log \
         recognize_e2e.py \
         --recog_json ${feat_test_dir}/data.json \
         --dict $dict \

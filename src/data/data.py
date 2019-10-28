@@ -132,6 +132,8 @@ def _collate_fn(batch, LFR_m=1, LFR_n=1, align_trun = 0):
 def load_inputs_and_targets(batch, LFR_m=1, LFR_n=1, align_trun=0):
     # From: espnet/src/asr/asr_utils.py: load_inputs_and_targets
     # load acoustic features and target sequence of token ids
+    #import pdb
+    #pdb.set_trace()
     xs = [kaldi_io.read_mat(b[1]['input'][0]['feat']) for b in batch]
     ys = [b[1]['output'][0]['tokenid'].split() for b in batch]
 

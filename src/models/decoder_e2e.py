@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import sys
 import codecs
 import random
-
+import six
 
 from ctc_prefix_score import CTCPrefixScore
 from ctc_prefix_score import CTCPrefixScoreTH
@@ -21,7 +21,7 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, vocab_size, embedding_dim, sos_id, eos_id, hidden_size,
-                 num_layers, offset, atype, dropout, lsm_weight, sampling_probability,
+                 num_layers, dproj_size, eproj_size, offset, atype, dropout, lsm_weight, sampling_probability,
                  peak_left = 0, peak_right = 0, bidirectional_encoder=True):
         super(Decoder, self).__init__()
         # Hyper parameters
@@ -42,20 +42,29 @@ class Decoder(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.bidirectional_encoder = bidirectional_encoder  # useless now
-        self.encoder_hidden_size = hidden_size  # must be equal now
+        self.eproj_size = eproj_size  # must be equal now
+        self.projection_size = dproj_size
         # Components
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
-        self.rnn = nn.ModuleList()
-        self.rnn += [nn.LSTMCell(self.embedding_dim +
-                                 self.encoder_hidden_size, self.hidden_size)]
-        for l in range(1, self.num_layers):
-            self.rnn += [nn.LSTMCell(self.hidden_size, self.hidden_size)]
+        self.dropout_emb = nn.Dropout(p=dropout)
+        self.decoder = nn.ModuleList()
+        self.dropout_dec = nn.ModuleList()
+        self.dropout_proj = nn.ModuleList()
+        self.decoder += [nn.LSTMCell(self.embedding_dim +
+                                 self.eproj_size, self.hidden_size)]
+        self.dropout_dec += [nn.Dropout(p=dropout)]
+        self.dropout_proj += [nn.Linear(self.hidden_size, self.projection_size)]
+
+        for _ in range(1, self.num_layers):
+            self.decoder += [nn.LSTMCell(self.projection_size, self.hidden_size)]
+            self.dropout_dec += [nn.Dropout(p=dropout)]
+            self.dropout_proj += [nn.Linear(self.hidden_size, self.projection_size)]
         if self.atype == "dot":
             self.attention = DotProductAttention()
         elif self.atype == "content":
-            self.attention = ContentBasedAttention(hidden_size)
+            self.attention = ContentBasedAttention(self.hidden_size, self.eproj_size)
         self.mlp = nn.Sequential(
-            nn.Linear(self.encoder_hidden_size + self.hidden_size,
+            nn.Linear(self.hidden_size + self.eproj_size,
                       self.hidden_size),
             #nn.Dropout(dropout),
             nn.Tanh(),
@@ -65,6 +74,17 @@ class Decoder(nn.Module):
         N = encoder_padded_outputs.size(0)
         H = self.hidden_size if H == None else H
         return encoder_padded_outputs.new_zeros(N, H)
+
+    def rnn_forward(self, ey, z_list, c_list, z_prev, c_prev):
+        #print(ey.size(), z_prev[0].size(), c_prev[0].size())
+        z_list[0], c_list[0] = self.decoder[0](ey, (z_prev[0], c_prev[0]))
+        for l in six.moves.range(1, self.num_layers):
+            z_list[l], c_list[l] = self.decoder[l](
+                self.dropout_proj[l - 1](
+                    self.dropout_dec[l - 1](
+                        z_list[l - 1])), (z_prev[l], c_prev[l]))
+        #z_list[-1] = self.dropout_proj[-1](self.dropout_dec[-1](z_list[-1]))
+        return z_list, c_list
 
     def forward(self, padded_input, encoder_padded_outputs, aligns, trun, epoch):
         """
@@ -81,7 +101,7 @@ class Decoder(nn.Module):
         #import pdb
         #pdb.set_trace()
         ys = [y[y != IGNORE_ID] for y in padded_input]  # parse padded ys
-        if aligns is not  None:
+        if aligns is not None:
             aligns = [y[y != IGNORE_ID] for y in aligns]
         # prepare input and output word sequences with sos/eos IDs
         eos = ys[0].new([self.eos_id])
@@ -116,6 +136,7 @@ class Decoder(nn.Module):
         att_c = self.zero_state(encoder_padded_outputs,
                                 H=encoder_padded_outputs.size(2))
         y_all = []
+        z_all = []
 
         # **********LAS: 1. decoder rnn 2. attention 3. concate and MLP
         #import pdb
@@ -127,22 +148,23 @@ class Decoder(nn.Module):
                 sp = self.sampling_probability + 0.01 * epoch
 
 
-        embedded = self.embedding(ys_in_pad)
+        embedded = self.dropout_emb(self.embedding(ys_in_pad))
         for t in range(output_length):
             #print(output_length)
             # step 1. decoder RNN: s_i = RNN(s_i−1,y_i−1,c_i−1)
             if t > 0 and self.sampling_probability and random.random() < sp:
-                y_out = y_all[-1]
-                y_out = np.argmax(y_out.detach(), axis=1)
-                rnn_input = torch.cat((self.embedding(y_out.cuda()), att_c), dim=1)
+                y_out = self.mlp(z_all[-1])
+                y_out = np.argmax(y_out.detach().cpu(), axis=1)
+                rnn_input = torch.cat((self.dropout_emb(self.embedding(y_out.cuda())), att_c), dim=1)
             else:
                 rnn_input = torch.cat((embedded[:, t, :], att_c), dim=1)
-            h_list[0], c_list[0] = self.rnn[0](
-                rnn_input, (h_list[0], c_list[0]))
-            for l in range(1, self.num_layers):
-                #h_list[l-1] = self.dropout(h_list[l-1])
-                h_list[l], c_list[l] = self.rnn[l](
-                    h_list[l-1], (h_list[l], c_list[l]))
+            h_list, c_list = self.rnn_forward(rnn_input, h_list, c_list, h_list, c_list)
+            #h_list[0], c_list[0] = self.rnn[0](
+            #    rnn_input, (h_list[0], c_list[0]))
+            #for l in range(1, self.num_layers):
+            #    #h_list[l-1] = self.dropout(h_list[l-1])
+            #    h_list[l], c_list[l] = self.rnn[l](
+            #        h_list[l-1], (h_list[l], c_list[l]))
 
             rnn_output = h_list[-1]  # below unsqueeze: (N x H) -> (N x 1 x H)
             # step 2. attention: c_i = AttentionContext(s_i,h)
@@ -171,12 +193,15 @@ class Decoder(nn.Module):
             #                              encoder_padded_outputs)
             att_c = att_c.squeeze(dim=1)
             # step 3. concate s_i and c_i, and input to MLP
-            mlp_input = torch.cat((rnn_output, att_c), dim=1)
-
-            predicted_y_t = self.mlp(mlp_input)
-            y_all.append(predicted_y_t)
-
-        y_all = torch.stack(y_all, dim=1)  # N x To x C
+            #mlp_input = torch.cat((rnn_output, att_c), dim=1)
+            #if self.context_residual:
+            z_all.append(torch.cat((self.dropout_dec[-1](rnn_output), att_c), dim=-1))  # utt x (zdim + hdim) 
+            
+            #predicted_y_t = self.mlp(mlp_input)
+            #y_all.append(predicted_y_t)
+        z_all = torch.stack(z_all, dim=1).view(batch_size * output_length, -1)
+        y_all = self.mlp(z_all)
+        #y_all = torch.stack(y_all, dim=1)  # N x To x C
         # **********Cross Entropy Loss
         # F.cross_entropy = NLL(log_softmax(input), target))
         #import pdb
